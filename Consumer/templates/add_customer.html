@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Admin PORTAL</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+
+        .dashboard-container {
+            width: 200px;
+            background-color: #2a2e39;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-container h3 {
+            margin-top: 0;
+        }
+
+        .section-button {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .section-button:hover {
+            background-color: #357bd8;
+        }
+
+        .content {
+            flex: 1;
+            background: linear-gradient(to bottom right, #4a90e2, #252a34);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #fff;
+            color: #4a90e2;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .table-container {
+            overflow: auto;
+            height: 70vh;
+            margin-top: 20px;
+            background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+            padding: 20px;
+            border-radius: 10px;
+            position: relative; 
+        }
+
+        .add-new-customer {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            margin-bottom:4vh;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 8vh;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: transparent;
+        }
+
+        th {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            color:#000;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: left;
+        }
+
+        .label-input-group {
+            display: flex;
+            flex-direction: row;
+            align-items: left;
+            margin-top: 10px;
+            color:#000;
+        }
+
+        .label-input-group label {
+            width: 120px;
+            margin-right: 10px;
+        }
+
+        input[type='text'],
+        input[type='number'],
+        input[type='tel'],
+        input[type='email'],
+        textarea {
+            flex: 1;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        input[type='submit'] {
+            background-color: #4a90e2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: auto;
+        }
+
+        input[type='submit']:hover {
+            background-color: #357bd8;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <a href="{% url 'sections-dashboard' %}?section=" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
+        <a href="{% url 'sections-dashboard' %}?section=customer" class="section-button">Customer</a>
+        <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button">Invoice</a>
+    </div>
+    <div class="content">
+        <header>
+            <h1>Customer Addition Form</h1>
+            <a href="{% url 'logout-user' %}"><button class="logout-button">Logout</button></a>
+        </header>
+
+        <div class="table-container">
+            
+            <form method='post'>
+                {% csrf_token %}
+                <div class="label-input-group">
+                    <label for="name_c">Name</label>
+                    <input type='text' id="name_c" name='name_c' required>
+                </div>
+                <div class="label-input-group">
+                    <label for="phone_c">Phone</label>
+                    <input type='tel' id="phone_c" name='phone_c' maxlength="15">
+                </div>
+                <div class="label-input-group">
+                    <label for="email_c">Email</label>
+                    <input type='email' id="email_c" name='email_c'>
+                </div>
+                <div class="label-input-group">
+                    <label for="address_c">Address</label>
+                    <textarea id="address_c" name="address_c"></textarea>
+                </div><br>
+                <input type="submit" value="Submit" style="width:15vh;text-align:center;align-items:center;flex:center" maxlegth="100">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
+
+
+
