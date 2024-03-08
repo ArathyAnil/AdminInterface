@@ -89,6 +89,28 @@
             margin-bottom:4vh;
         }
 
+        table {
+            width: 100%;
+            margin-top: 8vh;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: transparent;
+        }
+
+        th {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            color:#000;
+        }
+
         form {
             display: flex;
             flex-direction: column;
@@ -98,7 +120,7 @@
         .label-input-group {
             display: flex;
             flex-direction: row;
-            align-items: center;
+            align-items: left;
             margin-top: 10px;
             color:#000;
         }
@@ -108,9 +130,11 @@
             margin-right: 10px;
         }
 
+        input[type='text'],
         input[type='number'],
-        input[type='date'],
-        select {
+        input[type='tel'],
+        input[type='email'],
+        textarea {
             flex: 1;
             padding: 8px;
             margin-top: 5px;
@@ -118,8 +142,10 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
             resize: vertical;
-            width: calc(100% - 130px);
-            height: 6vh;
+        }
+
+        textarea {
+            height: 100px;
         }
 
         input[type='submit'] {
@@ -142,23 +168,59 @@
 
 <body>
     <div class="dashboard-container">
-        <a href="{% url 'sections-dashboard' %}?section=" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
-        <a href="{% url 'sections-dashboard' %}?section=customer" class="section-button">Customer</a>
-        <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button">Invoice</a>
+        <a href="{% url 'sections-dashboard' %}" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
+        <a href="{% url 'add-entry' %}" class="section-button">Add Customer/Invoice</a>
+        
+        {% for choice in choices %}
+        <a href="{% url 'display-list'%}?section={{ choice }}" class="section-button">{{choice}}</a>
+        {% endfor %}
+        
     </div>
     <div class="content">
         <header>
-            <h1>Invoice Addition Form</h1>
+            <h1>Customer Addition Form</h1>
             <a href="{% url 'logout-user' %}"><button class="logout-button">Logout</button></a>
         </header>
-
+        
         <div class="table-container">
-            
+            <div class="message-container" style="color:black">
+                {% include 'messages.html' %}
+                <script text="javascript">
+                    setTimeout(fade_out, 3000);
+                    function fade_out() {
+                        $(".message-container").fadeOut().empty();
+                    }
+                </script>
+            </div>
             <form method='post'>
                 {% csrf_token %}
                 <div class="label-input-group">
-                    <label for="customer_i">Name</label>
-                    <select id="customer_i" name="customer_i" required>
+                    <label for="name_c">Type</label>
+                    <select id="type" name="type" required> 
+                        <option value="" selected disabled>--SELECT--</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Invoice">Invoice</option>
+                    </select>
+                </div>
+                <div class="label-input-group">
+                    <label for="name">Name</label>
+                    <input type='text' id="name" name='name'>
+                </div>
+                <div class="label-input-group">
+                    <label for="phone">Phone</label>
+                    <input type='tel' id="phone" name='phone' maxlength="15">
+                </div>
+                <div class="label-input-group">
+                    <label for="email">Email</label>
+                    <input type='email' id="email" name='email'>
+                </div>
+                <div class="label-input-group">
+                    <label for="address">Address</label>
+                    <textarea id="address" name="address"></textarea>
+                </div><br>
+                <div class="label-input-group">
+                    <label for="customer">Customer</label>
+                    <select id="customer" name="customer">
                         <option value="" selected disabled>--SELECT--</option>
                         {% for cust in existing_customers %}
                         <option value="{{ cust.id }}">{{ cust.name }}</option>
@@ -166,29 +228,29 @@
                     </select>
                 </div>
                 <div class="label-input-group">
-                    <label for="date_i">Date</label>
-                    <input type='date' id="date_i" name='date_i' required>
+                    <label for="date">Date</label>
+                    <input type='date' id="date" name='date'>
                 </div>
                 <div class="label-input-group" >
-                    <label for="amount_i">Amount</label>
-                    <input type='number' id="amount_i" name='amount_i' min="1" step="any">
+                    <label for="amount">Amount</label>
+                    <input type='number' id="amount" name='amount' min="1" step="any">
                 </div>
                 <div class="label-input-group">
-                    <label for="status_i">Status</label>
-                    <select id="status_i" name="status_i">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
                         <option value="" selected disabled>--SELECT--</option>
-                        <option value="UNPAID">UNPAID</option>
-                        <option value="PAID">PAID</option>
-                        <option value="CANCELLED">CANCELLED</option>
+                        <option value="Unpaid">UNPAID</option>
+                        <option value="Paid">PAID</option>
+                        <option value="Cancelled">CANCELLED</option>
                     </select>
-                </div><br>
-                <div style="display: flex; justify-content: center; margin-top: 20px;" >
-                    <input type="submit" value="Submit" style="width: 15vh; text-align: center; height:6.5vh">&nbsp;
-                    <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button" style="background-color: #D22B2B; width: 15vh; text-align: center;" onclick="return confirm('Invoice will not be added?');">Cancel</a>
                 </div>
+                <input type="submit" value="Submit" style="width:15vh;text-align:center;align-items:center;flex:center" maxlegth="100">
             </form>
         </div>
     </div>
 </body>
 
 </html>
+
+
+

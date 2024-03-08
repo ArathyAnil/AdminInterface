@@ -17,13 +17,13 @@ There are 2 django apps
 # Users added
 
 username - TESTUSER 1
-password - Testuser1
+password - testuser1
 
 username - TESTUSER 2
-password - Testuser2
+password - testuser2
 
 username - TESTUSER 3
-password - Testuser3
+password - testuser3
 
 For adding a new user -
 

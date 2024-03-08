@@ -92,9 +92,12 @@
 
 <body>
     <div class="dashboard-container">
-        <a href="{% url 'sections-dashboard' %}?section=" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
-        <a href="{% url 'sections-dashboard' %}?section=customer" class="section-button">Customer</a>
-        <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button">Invoice</a>
+        <a href="{% url 'sections-dashboard' %}" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
+        <a href="{% url 'add-entry' %}" class="section-button">Add Customer/Invoice</a>
+        
+        {% for choice in choices %}
+        <a href="{% url 'display-list'%}?section={{ choice }}" class="section-button">{{choice}}</a>
+        {% endfor %}
     </div>
     <div class="content">
         <header>

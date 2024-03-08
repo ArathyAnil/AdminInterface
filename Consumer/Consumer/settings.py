@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'adminapp',
     'rest_framework_simplejwt',
     'rest_framework',
-    'adminApiapp',
 ]
 
 MIDDLEWARE = [

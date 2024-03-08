@@ -89,6 +89,28 @@
             margin-bottom:4vh;
         }
 
+        table {
+            width: 100%;
+            margin-top: 8vh;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: transparent;
+        }
+
+        th {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            color:#000;
+        }
+
         form {
             display: flex;
             flex-direction: column;
@@ -98,7 +120,7 @@
         .label-input-group {
             display: flex;
             flex-direction: row;
-            align-items: center;
+            align-items: left;
             margin-top: 10px;
             color:#000;
         }
@@ -108,9 +130,11 @@
             margin-right: 10px;
         }
 
+        input[type='text'],
         input[type='number'],
-        input[type='date'],
-        select {
+        input[type='tel'],
+        input[type='email'],
+        textarea {
             flex: 1;
             padding: 8px;
             margin-top: 5px;
@@ -118,8 +142,10 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
             resize: vertical;
-            width: calc(100% - 130px);
-            height: 6vh;
+        }
+
+        textarea {
+            height: 100px;
         }
 
         input[type='submit'] {
@@ -142,53 +168,84 @@
 
 <body>
     <div class="dashboard-container">
-        <a href="{% url 'sections-dashboard' %}?section=" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
-        <a href="{% url 'sections-dashboard' %}?section=customer" class="section-button">Customer</a>
-        <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button">Invoice</a>
+        <a href="{% url 'sections-dashboard' %}" style="text-decoration:none;color:#FFF;text-align:center;align-items:center"><h3>Dashboard</h3></a><br>
+        <a href="{% url 'add-entry' %}" class="section-button">Add Customer/Invoice</a>
+        {% for choice in choices %}
+        <a href="{% url 'display-list'%}?section={{ choice }}" class="section-button">{{choice}}</a>
+        {% endfor %}
+        
     </div>
     <div class="content">
         <header>
-            <h1>Invoice Addition Form</h1>
+            <h1>Customer/Invoice Update Form</h1>
             <a href="{% url 'logout-user' %}"><button class="logout-button">Logout</button></a>
         </header>
-
+        
         <div class="table-container">
-            
-            <form method='post'>
+            <div class="message-container" style="color:black">
+                {% include 'messages.html' %}
+                <script text="javascript">
+                    setTimeout(fade_out, 3000);
+                    function fade_out() {
+                        $(".message-container").fadeOut().empty();
+                    }
+                </script>
+            </div>
+            <form method='post' action="/getList/{{instance.id}}">
                 {% csrf_token %}
                 <div class="label-input-group">
-                    <label for="customer_e">Name</label>
-                    <select id="customer_e" name="customer_e" required>
+                    <input type="hidden" name="pk" value="{{ instance.id }}">
+                    
+                </div>
+                <div class="label-input-group">
+                    <label for="name">Name</label>
+                    <input type='text' id="name" name='name' value="{{instance.name}}">
+                </div>
+                <div class="label-input-group">
+                    <label for="phone">Phone</label>
+                    <input type='tel' id="phone" name='phone' maxlength="15" value={{instance.phone}}>
+                </div>
+                <div class="label-input-group">
+                    <label for="email">Email</label>
+                    <input type='email' id="email" name='email' value={{instance.email}}>
+                </div>
+                <div class="label-input-group">
+                    <label for="address">Address</label>
+                    <textarea id="address" name="address">{{instance.Address}}</textarea>
+                </div><br>
+                <div class="label-input-group">
+                    <label for="customer">Customer</label>
+                    <select id="customer" name="customer">
                         <option value="" selected disabled>--SELECT--</option>
                         {% for cust in existing_customers %}
-                        <option value="{{ cust.id }}" {% if form_data.customer_id == cust.id %}selected {% endif %}>{{ cust.name }}</option>
+                            <option value="{{ cust.id }}" {% if cust.id != '' and instance.customer_id == cust.id %} selected {% endif %}>{{ cust.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="label-input-group">
-                    <label for="date_e">Date</label>
-                    <input type='date' id="date_e" name='date_e' value="{{form_data.date}}" required>
+                    <label for="date">Date</label>
+                    <input type='date' id="date" name='date' value="{% if instance.date %}{{ instance.date }}{% endif %}">&nbsp;<p>selected date:{{instance.date}}</p>
                 </div>
                 <div class="label-input-group" >
-                    <label for="amount_e">Amount</label>
-                    <input type='number' id="amount_e" name='amount_e' min="1" value="{{form_data.amount}}" step="any">
+                    <label for="amount">Amount</label>
+                    <input type='number' id="amount" name='amount' min="1" step="any" value="{{instance.amount}}">
                 </div>
                 <div class="label-input-group">
-                    <label for="status_e">Status</label>
-                    <select id="status_e" name="status_e">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
                         <option value="" selected disabled>--SELECT--</option>
-                        <option value="UNPAID" {% if form_data.Status == 'UNPAID' %}selected {% endif %}>UNPAID</option>
-                        <option value="PAID" {% if form_data.Status == 'PAID' %}selected {% endif %}>PAID</option>
-                        <option value="CANCELLED" {% if form_data.Status == 'CANCELLED' %}selected {% endif %}>CANCELLED</option>
+                        <option value="Unpaid" {% if instance.Status == 'Unpaid' %} selected {% endif %}>UNPAID</option>
+                        <option value="Paid" {% if instance.Status == 'Paid' %} selected {% endif %}>PAID</option>
+                        <option value="Cancelled" {% if instance.Status == 'Cancelled' %} selected {% endif %}>CANCELLED</option>
                     </select>
-                </div><br>
-                <div style="display: flex; justify-content: center; margin-top: 20px;" >
-                    <input type="submit" value="Submit" style="width: 15vh; text-align: center; height:6.5vh">&nbsp;
-                    <a href="{% url 'sections-dashboard' %}?section=invoice" class="section-button" style="background-color: #D22B2B; width: 15vh; text-align: center;" onclick="return confirm('Invoice will not be added?');">Cancel</a>
                 </div>
+                <input type="submit" value="Submit" style="width:15vh;text-align:center;align-items:center;flex:center" maxlegth="100">
             </form>
         </div>
     </div>
 </body>
 
 </html>
+
+
+

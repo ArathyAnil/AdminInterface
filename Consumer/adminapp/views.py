@@ -4,12 +4,13 @@ from django.contrib.auth import authenticate,login
 from django.contrib import messages,auth
 from django.views.decorators.cache import cache_control
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_protect
-from .models import User,Customer,Invoice
-from datetime import datetime
-# Create your views here.
+from django.views import View
+from django.shortcuts import get_object_or_404
+from .models import User,TestModel,ModelClass
+from django.urls import reverse_lazy
+# # Create your views here.
 
-#USER AUTHENTICATION SECTION
+# USER AUTHENTICATION SECTION
 
 
 def userLogin(request):
@@ -30,7 +31,7 @@ def userLogin(request):
         if user.is_active and user.is_superuser:
 
             login(request,user)
-            return redirect(customerInvoiceList)
+            return redirect(dashboardView)
         
     return render(request,'login.html',{'formData':formData})
 
@@ -44,171 +45,110 @@ def logoutUser(request):
         return redirect(userLogin)
 
 
-#DASHBOARD SECTION
+# #DASHBOARD SECTION
     
-# fn for displaying customer, invoice and dashbord sections combined based on parameter passed 
+# fn for displaying dashbord section 
 @login_required(login_url="/login")
-def customerInvoiceList(request):
+def dashboardView(request):
 
     if request.user.is_authenticated and request.user.is_superuser:
-
-        section = request.GET.get('section','')
-
-        if section == 'customer':
-            existing_customers = Customer.objects.filter(user=request.user).values()
-            return render(request,'customer.html',{'existing_customers':existing_customers})
-        
-        if section=='invoice':
-            existing_invoice = Invoice.objects.filter(user=request.user).values('customer__name','date','amount','Status','id')
-            return render(request,'invoice.html',{'existing_invoice':existing_invoice})
         logged_user = request.user.username
-        customers = Customer.objects.filter(user=request.user).count()
-        invoice = Invoice.objects.filter(user=request.user).count()
-        return render(request,'admin.html',{'logged_user':logged_user,'customers':customers,'invoices':invoice})
+        choices = [choice.value for choice in ModelClass]
+        customers = TestModel.objects.filter(user=request.user,type='Customer').count()
+        invoice = TestModel.objects.filter(user=request.user,type='Invoice').count()
+        return render(request,'admin.html',{'logged_user':logged_user,'customers':customers,'invoices':invoice,'choices':choices})
+
+#fn to create update and list the created customers and invoices
+class TestModelView(View):
+
+    model = TestModel
+
+    def get(self, request, section=None, pk=None):
+
+        existing_customers = TestModel.objects.filter(user=request.user, type='Customer').values()
+        choices = [choice.value for choice in ModelClass]
+        instance = None
+        if pk:
+            instance = get_object_or_404(self.model, pk=pk)
+            return render(request, 'updateEntry.html', {'instance': instance, 'existing_customers': existing_customers, 'choices': choices})
+
+        section = request.GET.get('section', '')
+
+        if section:
+            sectionList = TestModel.objects.filter(user=request.user, type=section).values('name', 'phone', 'email', 'Address', 'customer__name', 'date', 'amount', 'Status', 'id')
+            return render(request, 'List_entry.html', {'sectionList': sectionList, 'choices': choices})
+
+        return render(request, 'add_entry.html', {'existing_customers': existing_customers, 'choices': choices})
 
 
-#fn for adding a new customer/invoice(combined) works based on the parameter passed   
-@login_required(login_url="/login")
-def addEntry(request):
+    def post(self, request,pk=None):
+        choices = [choice.value for choice in ModelClass]
+        data = request.POST 
 
-    if request.user.is_authenticated and request.user.is_superuser:
+        existing_customers = TestModel.objects.filter(user=request.user, type='Customer').values()
 
-        new_addition = request.GET.get('user','')
+        if data.get('customer'):
+            if TestModel.objects.filter(id=data.get('customer')).exists():
+                customer_instance = TestModel.objects.get(id=data.get('customer')).id
+            else:
 
-        if new_addition == 'add-customer':
+                messages.error(request, "Customer does not exist.")
+                return render(request, 'add_entry.html', {'existing_customers': existing_customers})
+        else:
 
-            name = request.POST.get('name_c')
-            phone = request.POST.get('phone_c')
-            email = request.POST.get('email_c')
-            address = request.POST.get('address_c')
+            customer_instance = None
 
-            form_data = {'name':name,'phone':phone,'email':email,'address':address}
+        if data.get('pk'):
 
-            if request.method == 'POST':
-                
-                adduser = Customer(user=request.user,
-                                   name=name,
-                                   phone=phone,
-                                   email=email,
-                                   Address=address)
-                adduser.save()
+            instance = get_object_or_404(self.model, pk=data.get('pk'))
 
-                redirect_url = reverse(customerInvoiceList) + '?section=customer'
-                return redirect(redirect_url)
+            instance.user_id = request.user.id
+            instance.customer_id = customer_instance
+            instance.name = data.get('name')
+            instance.phone = data.get('phone')
+            instance.email = data.get('email')
+            instance.Address = data.get('address')
+            instance.date = data.get('date')
+            instance.amount = data.get('amount')
+            instance.Status = data.get('status')
+
+            try:
+                instance.full_clean()
+
+            except Exception as e:
+                messages.error(request, str(e))
+                return render(request, 'updateEntry.html', {'instance': instance, 'existing_customers': existing_customers, 'choices': choices})
             
-            return render(request,'add_customer.html',{})
+            instance.save()
+
+            messages.success(request, "Entry edited successfully")
+            return render(request, 'updateEntry.html', {'instance': instance, 'existing_customers': existing_customers, 'choices': choices})
         
-        if new_addition == 'add-invoice':
+        else:
 
-            customer = request.POST.get('customer_i')
-            date = request.POST.get('date_i','1990-01-01')
-            amount = request.POST.get('amount_i')
-            status = request.POST.get('status_i')
-
-            existing_customers = Customer.objects.filter(user=request.user).values('name','id')
-
-            if request.method == 'POST':
-
-                customer_instance  = Customer.objects.get(id=customer)
-
-                addinvoice = Invoice(customer=customer_instance,
-                                     user=request.user,
-                                     date=date,
-                                     amount=amount,
-                                     Status=status)
-                addinvoice.save()
-
-                redirect_url = reverse(customerInvoiceList) + '?section=invoice'
-                return redirect(redirect_url)
+            instance = TestModel(
+                user_id=request.user.id,
+                customer_id=customer_instance,
+                name=data.get('name'),
+                phone=data.get('phone'),
+                email=data.get('email'),
+                Address=data.get('address'),
+                date=data.get('date'),
+                amount=data.get('amount'),
+                Status=data.get('status'),
+                type=data.get('type')
+            )
             
-            return render(request,'add_invoice.html',{'existing_customers':existing_customers})
+            try:
+                instance.full_clean()
+            except Exception as e:
+                messages.error(request, str(e))
+                return render(request, 'add_entry.html', {'existing_customers': existing_customers, 'choices': choices})
+            instance.save()
+            messages.success(request, "Entry added succesfully")
+            return render(request, 'add_entry.html', {'existing_customers': existing_customers, 'choices': choices})
         
 
-#fn to edit an existing customer entry
-@login_required(login_url="/login")
-def editCustomer(request,id):
+    
+    
 
-    if request.user.is_authenticated and request.user.is_superuser:
-
-        entry = Customer.objects.get(user=request.user, id=id)
-
-        name = request.POST.get('name_e')
-        phone = request.POST.get('phone_e')
-        email = request.POST.get('email_e')
-        address = request.POST.get('address_e')
-
-        existing_vals = Customer.objects.filter(id=id).values()
-        
-        if request.method == 'POST':
-
-            entry.name = name
-            entry.phone = phone
-            entry.email = email
-            entry.Address = address
-            entry.save()
-
-            redirect_url = reverse(customerInvoiceList) + '?section=customer'
-            return redirect(redirect_url)
-        
-        return render(request,'edit_customer.html',{'form_data':existing_vals[0]})
-
-
-#fn to delete an existing customer entry
-@login_required(login_url="/login")
-def deleteCustomer(request,id):
-
-    if request.user.is_authenticated and request.user.is_superuser:
-
-        entry = Customer.objects.filter(user=request.user, id=id)
-        entry.delete()
-
-        redirect_url = reverse(customerInvoiceList) + '?section=customer'
-        return redirect(redirect_url)
-
-
-#fn to edit an existing invoice entry
-@login_required(login_url="/login")
-def editInvoice(request,id):
-
-    if request.user.is_authenticated and request.user.is_superuser:
-
-        entry = Invoice.objects.get(user=request.user, id=id) 
-
-        customer = request.POST.get('customer_e')
-        date = request.POST.get('date_e','1990-01-01')
-        amount = request.POST.get('amount_e')
-        status = request.POST.get('status_e')
-
-        existing_vals = Invoice.objects.filter(id=id).values()
-
-        for vals in existing_vals:
-            vals["date"] = datetime.strftime(vals["date"],'%Y-%m-%d')
-
-        existing_customers = Customer.objects.filter(user=request.user).values('name','id')
-
-        if request.method == 'POST':
-
-            customer_instance  = Customer.objects.get(id=customer)
-            entry.customer = customer_instance
-            entry.date = date
-            entry.amount = amount
-            entry.Status = status
-            entry.save()
-
-            redirect_url = reverse(customerInvoiceList) + '?section=invoice'
-
-            return redirect(redirect_url)
-        return render(request,'edit_invoice.html',{'form_data':existing_vals[0],'existing_customers':existing_customers})
-
-
-#fn to delete an existing invoice entry
-@login_required(login_url="/login")
-def deleteInvoice(request,id):
-
-    if request.user.is_authenticated and request.user.is_superuser:
-
-        entry = Invoice.objects.filter(user=request.user, id=id)
-        entry.delete()
-
-        redirect_url = reverse(customerInvoiceList) + '?section=invoice'
-        return redirect(redirect_url)

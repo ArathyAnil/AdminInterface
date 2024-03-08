@@ -1,14 +1,12 @@
 from django.urls import path
-from .views import userLogin,logoutUser,customerInvoiceList,addEntry,editCustomer,deleteCustomer,editInvoice,deleteInvoice
+from .views import userLogin,logoutUser,TestModelView,dashboardView
 
 urlpatterns = [
     path('',userLogin,name='login-user'),
     path('logout',logoutUser,name='logout-user'),
-    path('dashboard',customerInvoiceList,name='sections-dashboard'),
-    path('add',addEntry,name='add-entry'),
-    path('edit-customer/<int:id>',editCustomer,name='edit-cust'),
-    path('delete-customer/<int:id>',deleteCustomer,name='delete-cust-entry'),
-    path('edit-invoice/<int:id>',editInvoice,name='edit-invoice'),
-    path('delete-invoice/<int:id>',deleteInvoice,name='delete-invoice-entry'),
+    path('dashboard',dashboardView,name='sections-dashboard'),
+    path('add',TestModelView.as_view(),name='add-entry'),
+    path('getList',TestModelView.as_view(),name='display-list'),
+    path('getList/<int:pk>',TestModelView.as_view(),name='put-entry')
 
 ]
